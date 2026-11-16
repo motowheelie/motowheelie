@@ -7,10 +7,37 @@
 <style>
 html,body{margin:0;height:100%;background:#07010f;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
 canvas{display:block;width:100vw;height:100vh;cursor:pointer}
+#consent{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(5,0,15,.88);z-index:10;font-family:"Arial Black",Impact,sans-serif}
+#consent .box{max-width:420px;margin:20px;padding:28px;border:2px solid #ff2e88;border-radius:14px;background:#12042a;color:#fff;text-align:center;box-shadow:0 0 40px rgba(255,46,136,.5)}
+#consent h2{margin:0 0 12px;color:#21f6ff;font-style:italic;text-shadow:0 0 12px #21f6ff}
+#consent p{font-family:system-ui,sans-serif;font-size:15px;line-height:1.5;color:#e6dcff;margin:0 0 20px}
+#consent button{font:inherit;font-size:16px;padding:12px 22px;margin:6px;border-radius:10px;cursor:pointer;border:2px solid #ff2e88}
+#accept{background:#ff2e88;color:#fff;box-shadow:0 0 18px #ff2e88}
+#decline{background:transparent;color:#ff9ac4}
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
+<div id="consent"><div class="box">
+  <h2>BEFORE YOU RIDE</h2>
+  <p id="consentText">This site records your <b>IP address</b>, country, browser and the time you visit when you click Accept. Records are kept for 90 days. If you don't want this, click Leave and nothing is recorded.</p>
+  <button id="accept">ACCEPT &amp; PLAY</button><button id="decline">LEAVE</button>
+</div></div>
+<script>
+// ===== Paste your Cloudflare Worker URL here (no slash at the end) =====
+const LOG_URL = 'https://motowheelie.adamguisset7.workers.dev';
+let consented = false;
+document.getElementById('accept').onclick = () => {
+  consented = true;
+  document.getElementById('consent').style.display = 'none';
+  try { fetch(LOG_URL + '/log', { method: 'POST' }).catch(() => {}); } catch (e) {}
+};
+document.getElementById('decline').onclick = () => {
+  document.getElementById('consentText').textContent = 'No problem, nothing was recorded. You can close this tab.';
+  document.getElementById('accept').style.display = 'none';
+  document.getElementById('decline').style.display = 'none';
+};
+</script>
 <script>
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const PINK = '#ff2e88', CYAN = '#21f6ff', YEL = '#ffe76a', PURP = '#b14bff', LIME = '#5dff8a', RED = '#ff3b3b';
@@ -89,6 +116,7 @@ function blip(freq) {
 
 // ---------- input ----------
 function down(e) {
+  if (!consented) return;
   if (e && e.preventDefault) e.preventDefault();
   initAudio();
   if (AC && AC.state === 'suspended') AC.resume();
